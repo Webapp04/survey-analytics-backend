@@ -43,7 +43,23 @@ const Survey = mongoose.model("Survey", {
 // Define routes and middleware here
 app.get("/surveys", async (req, res) => {
   try {
-    const surveys = await Survey.find();
+    const startDate = req.query.startDate;
+    const endDate = req.query.endDate;
+    let query = {};
+    // Check if startDate and endDate are provided and valid, then add them to the query
+    if (startDate && endDate) {
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+
+      if (!isNaN(startDateObj) && !isNaN(endDateObj)) {
+        endDateObj.setHours(23, 59, 59, 999);
+        query.createdAt = {
+          $gte: startDateObj,
+          $lte: endDateObj,
+        };
+      }
+    }
+    const surveys = await Survey.find(query);
     res.json(surveys);
   } catch (err) {
     res.status(500).json({ message: "Internal Server Error" });
